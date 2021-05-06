@@ -1,0 +1,98 @@
+const express = require('express');
+const app = express()
+
+const http = require('http')
+
+const cors = require('cors');
+
+let notes = [
+    {
+        id: 1,
+        content: "HTML is easy",
+        date: "2019-05-30T17:30:31.0982",
+        important: true
+    },
+    {
+        id: 2,
+        content: "HTML is easy",
+        date: "2019-05-30T17:30:31.0982",
+        important: true
+    },
+    {
+        id: 3,
+        content: "HTML is easy",
+        date: "2019-05-30T17:30:31.0982",
+        important: true
+    },
+    {
+        id: 4,
+        content: "HTML is easy",
+        date: "2019-05-30T17:30:31.0982",
+        important: false
+    }
+]
+
+const unknownEnspoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint'})
+}
+
+app.use(unknownEnspoint)
+app.use(cors())
+app.use(express.json())
+
+app.get('/', (request, response) => {
+    response.send('<h1>Hello World</h1>')
+})
+
+app.get('/api/notes', (request, response) => {
+    response.json(notes)
+})
+
+app.get('/api/notes/:id', (request, response) => {
+    const id = Number(request.params.id)
+    const note = notes.find(note => note.id === id)
+
+    if (note) {
+        response.json(note)
+    } else {
+        response.status(404).end()
+    }
+})
+
+app.delete('/api/notes/:id', (request, response) => {
+    const id = Number(request.params.id)
+    notes = notes.filter(note => note.id !== id)
+
+    response.status(204).end()
+})
+
+const generateId = () => {
+    const maxId = notes.length > 0 ? Math.max(...notes.map(n => n.id)) : 0
+
+    return maxId + 1
+}
+
+app.post('/api/notes', (request, response) => {
+    const body = request.body
+
+    if (!body.content) {
+        return response.status(404).json({
+            error: 'content missing'
+        })
+    }
+    const note = {
+        content: body.content,
+        important: body.important,
+        date: new Date(),
+        id: generateId()
+    }
+    
+    notes = notes.concat(note)
+
+    response.json(note)
+})
+
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`)
+})
